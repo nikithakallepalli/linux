@@ -11,11 +11,11 @@
  * Model specific registers (MSRs) by the module.
  * See SDM volume 4, section 2.1
  */
-#define IA32_VMX_PINBASED_CTLS	0x481
+#define IA32_VMX_PINBASED_CTLS 0x481
 #define IA32_VMX_PROCBASED_CTLS	0x482
-#define IA32_VMX_EXIT_CTLS	0x483
+#define IA32_VMX_EXIT_CTLS 0x483
 #define IA32_VMX_ENTRY_CTLS	0x484
-#define IA32_VMX_PROCBASED_CTLS2	0x48B
+#define IA32_VMX_PROCBASED_CTLS2 0x48B
 /*
  * struct caapability_info
  *
@@ -148,7 +148,25 @@ report_capability(struct capability_info *cap, uint8_t len, uint32_t lo,
 		printk(msg);
 	}
 }
+/*
+ * check if secondary proc based controls are enabled
+ */
+bool 
+isSecondaryProcEnabled(void)
+{
+	uint32_t lo, hi;
 
+	/* Primary procbased controls */
+	rdmsr(IA32_VMX_PROCBASED_CTLS, lo, hi);
+	if(hi & (1 << 31))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 /*
  * detect_vmx_features
  *
@@ -175,10 +193,18 @@ detect_vmx_features(void)
 		(uint64_t)(lo | (uint64_t)hi << 32));
 	report_capability(exitbased, 11, lo, hi);
 	/* Secondary Procbased controls */
-	rdmsr(IA32_VMX_PROCBASED_CTLS2, lo, hi);
-	pr_info("secondaryprocbased Controls MSR: 0x%llx\n",
-		(uint64_t)(lo | (uint64_t)hi << 32));
-	report_capability(secondaryprocbased, 23, lo, hi);
+	/* check if secondary proc based controls are enabled*/
+	if(isSecondaryProcEnabled())
+	{
+		rdmsr(IA32_VMX_PROCBASED_CTLS2, lo, hi);
+		pr_info("secondaryprocbased Controls MSR: 0x%llx\n",
+			(uint64_t)(lo | (uint64_t)hi << 32));
+		report_capability(secondaryprocbased, 23, lo, hi);
+	}
+	else
+	{
+		printk("secondaryprocbased Controls are not enbaled:\n");
+	}
 	/* Entry based controls */
 	rdmsr(IA32_VMX_ENTRY_CTLS, lo, hi);
 	pr_info("entrybased Controls MSR: 0x%llx\n",
@@ -217,4 +243,4 @@ cleanup_module(void)
 {
 	printk(KERN_INFO "CMPE 283 Assignment 1 Module Exits\n");
 }
-MODULE_LICENSE("GPL v2");
+MODULE_LICENSE("GSL v2");
