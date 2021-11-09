@@ -205,7 +205,8 @@ detect_vmx_features(void)
 	{
 		printk("secondaryprocbased Controls are not enbaled:\n");
 	}
-	/* Entry based controls */
+
+	/* Entrybased controls */
 	rdmsr(IA32_VMX_ENTRY_CTLS, lo, hi);
 	pr_info("entrybased Controls MSR: 0x%llx\n",
 		(uint64_t)(lo | (uint64_t)hi << 32));
