@@ -32,6 +32,12 @@
 u32 kvm_cpu_caps[NR_KVM_CPU_CAPS] __read_mostly;
 EXPORT_SYMBOL_GPL(kvm_cpu_caps);
 
+atomic_t total_exits;
+EXPORT_SYMBOL(total_exits);
+
+atomic64_t total_time_exits = ATOMIC64_INIT(0);
+EXPORT_SYMBOL(total_time_exits);
+
 static u32 xstate_required_size(u64 xstate_bv, bool compacted)
 {
 	int feature_bit = 0;
@@ -1232,14 +1238,30 @@ EXPORT_SYMBOL_GPL(kvm_cpuid);
 
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
-	u32 eax, ebx, ecx, edx;
-
+	u32 eax,ebx,ecx,edx;
+	
 	if (cpuid_fault_enabled(vcpu) && !kvm_require_cpl(vcpu, 0))
 		return 1;
 
 	eax = kvm_rax_read(vcpu);
 	ecx = kvm_rcx_read(vcpu);
-	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
+	if(eax==0x4fffffff)
+	{
+		eax=atomic_read(&total_exits);
+		printk(KERN_INFO "exits =%d", atomic_read(&total_exits));
+	}
+	else if(eax==0x4ffffffe)
+	{
+		// high 32 bits of the total time spent processing all exits
+		ebx = (atomic64_read(&total_time_exits) >> 32);
+		// low 32 bits of the total time spent processing all exits 
+		ecx = (atomic64_read(&total_time_exits) & 0xFFFFFFFF); 
+		printk(KERN_INFO "Total exit time for processing all exits = %llu", atomic64_read(&total_time_exits));
+	}
+	else
+	{
+		kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
+	}
 	kvm_rax_write(vcpu, eax);
 	kvm_rbx_write(vcpu, ebx);
 	kvm_rcx_write(vcpu, ecx);
