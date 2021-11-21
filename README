@@ -56,3 +56,52 @@ sudo apt install bison
 sudo apt-get install libssl-dev
 sudo apt-get install libelf-dev
 
+Assignment-2:
+
+Nikitha:
+● I have worked on CPUID leaf node %eax=0x4FFFFFFF.
+● Modified the code in vmx.c to get the total number of exits.
+●	Modified the code in cpuid.c to to get the total number of exits.
+●	Installed the nested virtual machine inside the virtual machine.
+● Ran CPUID Package with 0x4FFFFFFF in eax.
+● Total number of exits is returned to eax.
+Lakshmi:
+●	I have worked on CPUID leaf node %eax=0x4FFFFFFE:
+●	Modified the code in vmx.c to get the total time taken in handling the exits.
+●	Modified the code in cpuid.c to to get the total time taken in handling the exits.
+●	Installed CPUID Packege inside the nested VM.
+●	Ran CPUID Package with 0x4FFFFFFE in eax.
+● Total time taken higher32 bits are returned to ebx and lower32 bits are returned to ecx.
+
+Commands for executing the Assignment2:
+● We have edited the code in vmx.c and cpuid.c and ran the below commands
+  make modules
+  make -j -4 modules
+  sudo bash
+  sudo make INSTALL_MOD_STRIP=1 modules_install && make install
+  sudo rmmod kvm-intel
+  sudo rmmod kvm
+  modprobe kvm
+  modprobe kvm-intel
+● Creating Inner Virtual Machine inside a VM using the below commands
+  sudo apt update
+  sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
+  sudo systemctl status libvirtd
+  sudo systemctl enable --now libvirtd
+  sudo apt install virt-manager
+  sudo virt-manager
+  install ubuntu 20.4 iso image
+● Installing CPUID Package
+  downloaded the CPUID deb Package for AMD64(https://packages.ubuntu.com/bionic/admin/cpuid)
+  installed the above package using the command install using sudo dpkg -i cpuid_20170122-1.deb
+● We have ran the below commands in the inner VM which is inside a VM
+  cpuid -l 4fffffff -s exit_number
+  cpuid -l 4ffffffe -s exit_number
+● We ran the command dmsg in the outer VM which gave the below output
+
+  
+  
+
+  
+  
+  
