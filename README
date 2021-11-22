@@ -99,7 +99,8 @@ Commands for executing the Assignment2:
   cpuid -l 4ffffffe -s exit_number
 ● We ran the command dmsg in the outer VM which gave the below output
 
-<img src="/linux/cmpe283/image/inner_vm.jpeg" alt="My output"/>
+# <img src="/linux/cmpe283/image/inner_vm.jpeg" alt="My output"/>
+![](/linux/cmpe283/image/inner_vm.jpeg)
 
   
 
