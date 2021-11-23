@@ -100,7 +100,7 @@ Commands for executing the Assignment2:
   cpuid -l 4fffffff -s exit_number
   cpuid -l 4ffffffe -s exit_number
   The output for these commands are in the path: /linux/cmpe283/image/inner_vm.jpeg
-● We ran the command dmsg in the outer VM which gave the output in the mentioned path below
+● We ran the command dmesg in the outer VM which gave the output in the mentioned path below
   /linux/cmpe283/image/outer_vm.jpeg
 
   
