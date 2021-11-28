@@ -32,11 +32,19 @@
 u32 kvm_cpu_caps[NR_KVM_CPU_CAPS] __read_mostly;
 EXPORT_SYMBOL_GPL(kvm_cpu_caps);
 
+
 atomic_t total_exits;
 EXPORT_SYMBOL(total_exits);
 
 atomic64_t total_time_exits = ATOMIC64_INIT(0);
 EXPORT_SYMBOL(total_time_exits);
+
+u32 number_of_exits_per_exit_number[69];
+EXPORT_SYMBOL(number_of_exits_per_exit_number);
+
+atomic64_t time_per_exit[69];
+EXPORT_SYMBOL(time_per_exit);
+
 
 static u32 xstate_required_size(u64 xstate_bv, bool compacted)
 {
@@ -1258,6 +1266,55 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 		ecx = (atomic64_read(&total_time_exits) & 0xFFFFFFFF); 
 		printk(KERN_INFO "Total exit time for processing all exits = %llu", atomic64_read(&total_time_exits));
 	}
+	else if(eax==0x4ffffffd)
+	{
+		if(ecx >= 0 && ecx <= 69){
+
+			if(ecx == 35 || ecx == 38 || ecx == 42 || ecx == 65){
+				printk(KERN_INFO "Exit number not defined in SDM: %d", ecx);
+				eax = 0; 
+				ebx = 0; 
+				ecx = 0; 
+				edx = 0xFFFFFFFF;
+			}else{
+				eax = number_of_exits_per_exit_number[(int)ecx];
+				printk(KERN_INFO "exit number= %d, number_of_exits =%d", (int)ecx, number_of_exits_per_exit_number[(int)ecx]);
+			}
+		}else{
+			printk(KERN_INFO "Exit number not defined in KVM: %d", ecx);
+			eax = 0; 
+			ebx = 0; 
+			ecx = 0; 
+			edx = 0;
+		}	
+	}
+	else if(eax==0x4ffffffc)
+	{
+
+	  	printk(KERN_INFO "exit number given in ecx=%d",(int)ecx);
+		if(ecx >= 0 && ecx <= 69){
+
+			if(ecx == 35 || ecx == 38 || ecx == 42 || ecx == 65){
+				printk(KERN_INFO "Exit number not defined in SDM: %d", ecx);
+				eax = 0; 
+				ebx = 0; 
+				ecx = 0; 
+				edx = 0xFFFFFFFF;
+			}else{
+				// high 32 bits of the total time spent processing all exits
+				ebx = ((atomic64_read(&time_per_exit[(int)ecx]) >> 32));
+				// Lower 32 bits of the total time spent processing all exits				
+		    		ecx = ((atomic64_read(&time_per_exit[(int)ecx]) & 0xFFFFFFFF ));
+		    		printk(KERN_INFO "Exit number= %d, time_per_exit =%llu", (int)ecx,atomic64_read(&time_per_exit[(int)ecx]));
+			}
+		}else{
+			printk(KERN_INFO "Exit number not defined in KVM: %d", ecx);
+			eax = 0; 
+			ebx = 0; 
+			ecx = 0; 
+			edx = 0;
+		}
+	}
 	else
 	{
 		kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
@@ -1268,4 +1325,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	kvm_rdx_write(vcpu, edx);
 	return kvm_skip_emulated_instruction(vcpu);
 }
+
+
 EXPORT_SYMBOL_GPL(kvm_emulate_cpuid);
+

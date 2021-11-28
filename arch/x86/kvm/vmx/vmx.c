@@ -72,6 +72,8 @@ MODULE_LICENSE("GPL");
 
 extern atomic_t total_exits;
 extern atomic64_t total_time_exits;
+extern u32 number_of_exits_per_exit_number[69];
+extern atomic64_t time_per_exit[69];
 
 #ifdef MODULE
 static const struct x86_cpu_id vmx_cpu_id[] = {
@@ -5916,6 +5918,7 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
 		       vmcs_read16(VIRTUAL_PROCESSOR_ID));
 }
 
+
 /*
  * The guest has exited.  See if we can fix it or if we need userspace
  * assistance.
@@ -5923,14 +5926,19 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
 static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 {
 	u64 start_time;
+	u64 timetaken;
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	union vmx_exit_reason exit_reason = vmx->exit_reason;
 	u32 vectoring_info = vmx->idt_vectoring_info;
 	u16 exit_handler_index;
+	int exit_hndlr;
 	
-	start_time = rdtsc();
+	
 	atomic_inc(&total_exits);
 	
+	if (exit_reason.basic <= 69) {
+		number_of_exits_per_exit_number[exit_reason.basic]++;		
+	}
 
 	/*
 	 * Flush logged GPAs PML buffer, this will make dirty_bitmap more
@@ -6071,10 +6079,20 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 						kvm_vmx_max_exit_handlers);
 	if (!kvm_vmx_exit_handlers[exit_handler_index])
 		goto unexpected_vmexit;
-		
-	atomic64_add(rdtsc() - start_time, &total_time_exits);
-
-	return kvm_vmx_exit_handlers[exit_handler_index](vcpu);
+	
+	start_time = rdtsc();		
+	
+	exit_hndlr=kvm_vmx_exit_handlers[exit_handler_index](vcpu);
+	
+	timetaken=rdtsc() - start_time;
+	
+	atomic64_add(timetaken, &total_time_exits);	
+	
+        atomic64_add(timetaken,&time_per_exit[(int)exit_handler_index]);	
+	
+	
+	return exit_hndlr;
+	//return kvm_vmx_exit_handlers[exit_handler_index](vcpu);
 
 unexpected_vmexit:
 	vcpu_unimpl(vcpu, "vmx: unexpected exit reason 0x%x\n",
