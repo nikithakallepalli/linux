@@ -97,15 +97,51 @@ Commands for executing the Assignment2:
   downloaded the CPUID deb Package for AMD64(https://packages.ubuntu.com/bionic/admin/cpuid)
   installed the above package using the command install using sudo dpkg -i cpuid_20170122-1.deb
 ● We have ran the below commands in the inner VM which is inside a VM
-  cpuid -l 4fffffff -s exit_number
-  cpuid -l 4ffffffe -s exit_number
+  cpuid -l 0X4fffffff -s exit_number
+  cpuid -l 0X4ffffffe -s exit_number
   The output for these commands are in the path: /linux/cmpe283/image/inner_vm.jpeg
 ● We ran the command dmesg in the outer VM which gave the output in the mentioned path below
   /linux/cmpe283/image/outer_vm.jpeg
+  
+  Assignment-3:
+  
+  Nikitha:
+● I have worked on CPUID leaf node %eax=0x4FFFFFFC.
+● Modified the code in vmx.c to get the total time spent in processing specific exit number provided in ecx.
+●	Modified the code in cpuid.c to to get the higher 32 bits of exit processing time in ebx
+●	Modified the code in cpuid.c to to get the Lower 32 bits of exit processing time in ecx
+● Ran CPUID Package with 0x4FFFFFFC and exit number in ecx.
 
-  
+Lakshmi:
+●	I have worked on CPUID leaf node %eax=0x4FFFFFFD:
+●	Modified the code in vmx.c to get the number of exits for a given exit nuber in ecx.
+●	Modified the code in cpuid.c to to get the total number of exits for a given exit number.
+●	Ran CPUID Package with 0x4FFFFFFD and exit number in ecx.
 
+Output:
+● We have ran the below commands in the inner VM which is inside a VM
+  cpuid -l 0X4ffffffc -s exit_number
+  cpuid -l 0X4ffffffd -s exit_number
+  
+● We ran the command dmesg in the outer VM which gave the output.
 
+Observations:
+3. Comment on the frequency of exits – does the number of exits increase at a stable rate? Or are there 
+more exits performed during certain VM operations? Approximately how many exits does a full VM 
+boot entail?
+The frequency of exits is increasing at a stable rate. From the screenshots mentioned in the path(before and after boot) we have observed that VM boot for all the exits entails up to ~6800000.
   
   
-  
+4. Of the exit types defined in the SDM, which are the most frequent? Least?
+
+Most Frequent Exits:
+●	Exit number 48 - EPT Violation
+●	Exit number 32 - WRMSR
+●	Exit number 1- External Interrupt
+●	Exit number 12- HLT
+●	Exit number 49- EPT misconfiguration
+●	Exit number 10- CPUID
+Least Frequent Exits :
+●	Exit number 54 - WBINVD or WBNOINVD
+●	Exit number 55 -  XSETBV
+●	Exit number 29 - MOV DR
