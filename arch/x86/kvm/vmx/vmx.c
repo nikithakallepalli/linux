@@ -5918,6 +5918,7 @@ void dump_vmcs(struct kvm_vcpu *vcpu)
 		       vmcs_read16(VIRTUAL_PROCESSOR_ID));
 }
 
+void exit_time_per_reason(u32 exit_handler_index,u64 time);
 
 /*
  * The guest has exited.  See if we can fix it or if we need userspace
@@ -5933,7 +5934,7 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	u16 exit_handler_index;
 	int exit_hndlr;
 	
-	
+	start_time = rdtsc();	
 	atomic_inc(&total_exits);
 	
 	if (exit_reason.basic <= 69) {
@@ -6080,16 +6081,14 @@ static int __vmx_handle_exit(struct kvm_vcpu *vcpu, fastpath_t exit_fastpath)
 	if (!kvm_vmx_exit_handlers[exit_handler_index])
 		goto unexpected_vmexit;
 	
-	start_time = rdtsc();		
-	
+		
 	exit_hndlr=kvm_vmx_exit_handlers[exit_handler_index](vcpu);
 	
 	timetaken=rdtsc() - start_time;
 	
 	atomic64_add(timetaken, &total_time_exits);	
 	
-        atomic64_add(timetaken,&time_per_exit[(int)exit_handler_index]);	
-	
+        exit_time_per_reason(exit_reason.basic,timetaken);
 	
 	return exit_hndlr;
 	//return kvm_vmx_exit_handlers[exit_handler_index](vcpu);

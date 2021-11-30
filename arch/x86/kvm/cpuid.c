@@ -42,9 +42,11 @@ EXPORT_SYMBOL(total_time_exits);
 u32 number_of_exits_per_exit_number[69];
 EXPORT_SYMBOL(number_of_exits_per_exit_number);
 
-atomic64_t time_per_exit[69];
-EXPORT_SYMBOL(time_per_exit);
 
+static atomic64_t time_per_exit[69];
+
+void exit_time_per_reason(u32 exit_handler_index,u64 time);
+EXPORT_SYMBOL_GPL(exit_time_per_reason);
 
 static u32 xstate_required_size(u64 xstate_bv, bool compacted)
 {
@@ -1300,12 +1302,13 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 				ebx = 0; 
 				ecx = 0; 
 				edx = 0xFFFFFFFF;
-			}else{
-				// high 32 bits of the total time spent processing all exits
-				ebx = ((atomic64_read(&time_per_exit[(int)ecx]) >> 32));
-				// Lower 32 bits of the total time spent processing all exits				
-		    		ecx = ((atomic64_read(&time_per_exit[(int)ecx]) & 0xFFFFFFFF ));
+			}else{				
 		    		printk(KERN_INFO "Exit number= %d, time_per_exit =%llu", (int)ecx,atomic64_read(&time_per_exit[(int)ecx]));
+		    		// high 32 bits of the total time spent processing all exits
+				ebx = ( (atomic64_read(&time_per_exit[(int)ecx]) >> 32) );		   
+				// Lower 32 bits of the total time spent processing all exits	
+				ecx = ( (atomic64_read(&time_per_exit[(int)ecx]) & 0xFFFFFFFF ));			
+		    		
 			}
 		}else{
 			printk(KERN_INFO "Exit number not defined in KVM: %d", ecx);
@@ -1326,6 +1329,11 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	return kvm_skip_emulated_instruction(vcpu);
 }
 
+void exit_time_per_reason(u32 exit_handler_index,u64 time){
+    if(exit_handler_index >= 0 && exit_handler_index < 70){ 
+        atomic64_add(time,&time_per_exit[(int)exit_handler_index]);        
+    }
+}
 
 EXPORT_SYMBOL_GPL(kvm_emulate_cpuid);
 
