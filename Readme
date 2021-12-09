@@ -146,6 +146,8 @@ Least Frequent Exits :
 ●	Exit number 55 -  XSETBV
 ●	Exit number 29 - MOV DR
 
+The output files are place in the path linux/cmpe283/Assignment 3/Images(Assignment3).docx
+
 Assignment 4:
 
 Nikitha:
@@ -170,6 +172,7 @@ The exits count in shadow paging increases when compared to the nested paging. Y
 What changed between the two runs (ept vs no-ept)?
 The changes between the two runs with ept and without ept are the exit counts. The exit count has been increased with no-ept due to the overhead associated with shadow paging.
 
+The output files are place in the path linux/cmpe283/Assignment 4/Assignment4-After shadow.docx
 
 
   
